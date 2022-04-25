@@ -10,7 +10,7 @@ from rotten_tomatoes_scraper.rt_scraper import MovieScraper
 from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
-from .models import AppReview, Account, Film, SavedFilm, RecentReviews
+from .models import AppReview, Account, Film, RecentlyVisited, SavedFilm, RecentReviews
 
 def change_password(request):
     if request.method == "PUT":
@@ -78,6 +78,7 @@ def search_movie(request):
         if exist == True:
             film = storedfilm
             info = get_cached_film_info(film)
+            set_recently_visited(request, name)
             if request.user.is_authenticated:
                 flag = check_if_film_list(request, film.name)
                 info['inUserList'] = flag
@@ -99,6 +100,7 @@ def search_movie(request):
             film.pop('meta_reviews')
             film.pop('meta_user_reviews')
             save_film(film)
+            set_recently_visited(request, name)
             recentreviews = get_recent_reviews(name, meta, meta_user)
 
             return JsonResponse({
@@ -108,6 +110,41 @@ def search_movie(request):
                 'streaming': stream_avail,
                 'inUserList': False
             })
+
+def set_recently_visited(request, name):
+    temp = None
+    for film in Film.objects.all():
+        if film.name.lower() == name.lower():
+            temp = film
+            break
+    
+    flag = False
+    for recent in RecentlyVisited.objects.all():
+            if recent.film.name.lower() == temp.name.lower():
+                if request.user.is_authenticated:
+                    recent.usersVisited.add(Account.objects.get(username=request.user.username))
+                recent.recentDate = datetime.now()
+                flag = True
+                return JsonResponse({
+                    'film': recent.film.to_dict(),
+                    'usersVisited': recent.get_users(),
+                    'recentDate': recent.recentDate
+                })
+    
+    if flag == False:
+        recent = RecentlyVisited()
+        recent.film = temp
+        recent.recentDate = datetime.now()
+        recent.save()
+        if request.user.is_authenticated:
+            recent.usersVisited.add(Account.objects.get(username=request.user.username))
+        
+        return JsonResponse({
+            'film': recent.film.to_dict(),
+            'usersSaved': recent.get_users(),
+            'recentDate': recent.recentDate
+        })
+        
 
 def get_trailer(name):
     # API information

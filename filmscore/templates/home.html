@@ -4,11 +4,75 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<h1>Hi</h1>
-{% if user.is_authenticated %}
-    <p>You are logged in</p> 
-{% else %}
-    <p>You are not logged in</p>
-{% endif %}
-
+<div>
+    <h1>Hi</h1>
+    {% if user.is_authenticated %}
+        <p>You are logged in</p><br/>
+        <div>
+            <h5>Films that you recently visited</h5>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Poster</th>
+                        <th scope="col">Film</th>
+                        <th scope="col">Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for visit in userVisited %}
+                    <tr>
+                        <td><img src="{{ visit.film.poster }}" width="300" height="400"></td>
+                        <td><a href="{% url 'selected' visit.film.name %}">{{ visit.film.name }}</a></td>
+                        <td>{{ visit.film.avgscore }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div>
+            <h5>Films that other people have recently visited</h5>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Poster</th>
+                        <th scope="col">Film</th>
+                        <th scope="col">Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for visit in visited %}
+                    <tr>
+                        <td><img src="{{ visit.film.poster }}" width="300" height="400"></td>
+                        <td><a href="{% url 'selected' visit.film.name %}">{{ visit.film.name }}</a></td>
+                        <td>{{ visit.film.avgscore }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p>You are not logged in</p><br/>
+        <div>
+            <h5>Films that other people have recently visited</h5>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Poster</th>
+                        <th scope="col">Film</th>
+                        <th scope="col">Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for visit in visited %}
+                    <tr>
+                        <td><img src="{{ visit.film.poster }}" width="300" height="400"></td>
+                        <td><a href="{% url 'selected' visit.film.name %}">{{ visit.film.name }}</a></td>
+                        <td>{{ visit.film.avgscore }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>
 {% endblock %}

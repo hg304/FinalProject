@@ -1,16 +1,25 @@
-import json
-from multiprocessing import context
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib.auth import login, authenticate, logout
 
-from .models import Film, SavedFilm
+from .models import Film, RecentlyVisited, SavedFilm
 from .forms import LogInForm, SignUpForm
-from .api import search_movie
 
 def home_view(request):
-    return render(request, 'home.html', None)
+    visited = RecentlyVisited.objects.all()
+    filmswithuser = []
+    for film in visited:
+        temp = film
+        users = temp.get_users()
+        for user in users:
+            if user == request.user.username:
+                filmswithuser.append(temp)
+    return render(request, 'home.html', 
+    {
+        'visited': visited,
+        'userVisited': filmswithuser
+    })
 
 def film_view(request):
     return render(request, 'film.html', None)

@@ -97,4 +97,23 @@ class SavedFilm(models.Model):
             'score': self.film.avgscore,
             'userSaved': self.get_users()
         }
+    
+class RecentlyVisited(models.Model):
+    film = models.ForeignKey(Film, to_field="name", on_delete=models.CASCADE)
+    usersVisited = models.ManyToManyField(Account)
+    recentDate = models.DateTimeField()
+
+    def get_users(self):
+        if self.usersVisited.all() == None:
+            return []
+        return [user.username for user in self.usersVisited.all()]
+
+    def to_dict(self):
+        return {
+            'film': self.film.name,
+            'poster': self.film.poster,
+            'score': self.film.avgscore,
+            'usersVisited': self.get_users(),
+            'recentDate': self.recentDate
+        }
 
