@@ -1,10 +1,11 @@
 import json
 from multiprocessing import context
+from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib.auth import login, authenticate, logout
 
-from filmscore.models import SavedFilm
+from .models import Film, SavedFilm
 from .forms import LogInForm, SignUpForm
 from .api import search_movie
 
@@ -79,3 +80,6 @@ def signup_view(request):
 def log_out(request):
     logout(request)
     return redirect(reverse('home'))
+
+def health(request):
+    return HttpResponse(Film.objects.count())
