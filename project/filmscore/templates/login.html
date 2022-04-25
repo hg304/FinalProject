@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Log in to the Network{% endblock %}
+
+{% block content %}
+<div class="back">
+    <div class="div-center">
+    <div class="content"> 
+            <h3>Login</h3>
+            <hr />
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    {{ form }}
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+                <hr />
+                <a class="btn btn-link" href="{% url 'signup' %}" role="button">Sign Up</a>
+            </form>  
+        </div>
+    </div>
+</div>
+{% endblock %}

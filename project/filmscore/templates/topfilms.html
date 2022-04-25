@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Popular Films{% endblock %}
+{% block content %}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">Rank</th>
+            <th scope="col">Title</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% csrf_token %}
+        <tr v-for="(film, index) in films.films">
+            <th scope="row">[[ film.rank ]]</th>
+            <td>[[ film.title ]]</td>
+        </tr>
+    </tbody>
+</table>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let myApp = Vue.createApp({
+        delimiters: ["[[", "]]"],
+        data() {
+            return {
+                films: []
+            }
+        },
+        async created() {
+            await this.getFilms();
+        },
+        methods: {
+            async getFilms() {
+                let response = await fetch("{% url 'getpopularfilms' %}");
+                if (response.ok) {
+                    let data = await response.json();
+                    this.films = data;
+                    console.log(this.films);
+                }
+            },
+            
+        },
+    });
+
+    myApp.mount('#app');
+</script>
+{% endblock %}

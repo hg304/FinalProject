@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% block title %}Home{% endblock %}
+{% block content %}
+
+<div>
+    <h1>Hi {{ user.username }}</h1>
+    <div>
+        <p>Here are your details:</p><br>
+        <p><strong>Username: {{ user.username }}</strong></p>
+        <p><strong>Email: {{ user.email }}</strong></p>
+        <p><strong>First Name: {{ user.firstName }}</strong></p>
+        <p><strong>Last Name: {{ user.lastName }}</strong></p>
+
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#changePassModal">
+            Change Password
+        </button>
+        
+        <div class="modal fade" id="changePassModal" tabindex="-1" aria-labelledby="changePassModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                <h5 class="modal-title" id="changePassModalLabel">Change your password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="currentPassword" class="form-control">Current Password</label>
+                            <input type="password" v-model="pass.currentpass" class="form-control" id="currentPassword" placeholder="Enter Current Password">
+                        </div><br>
+                        <div class="form-group">
+                            <label for="newPassword1" class="form-control">New Password</label>
+                            <input type="password" v-model="pass.newpass1" class="form-control" id="newPassword1" placeholder="Enter New Password"><br>
+                            <label for="newPassword2" class="form-control">Confirm New Password</label>
+                            <input type="password" v-model="pass.newpass2" class="form-control" id="newPassword2" placeholder="Enter New Password Again">
+                        </div>
+                        <button type="button" class="btn btn-success" v-on:click="changePassword(pass)">Submit</button>
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Go back</button>
+                    </form>
+                </div>
+            </div>
+            </div>
+        </div>
+    
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#changeInfoModal">
+            Change your details
+        </button><br><br>
+        
+        <div class="modal fade" id="changeInfoModal" tabindex="-1" aria-labelledby="changeInfoModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                <h5 class="modal-title" id="changeInfoModalLabel">Change your details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="username" class="form-control">Username</label>
+                            <input type="text" v-model="details.username" class="form-control" id="username" placeholder="Enter New Username">
+                        </div><br>
+                        <div class="form-group">
+                            <label for="email" class="form-control">Email</label>
+                            <input type="email" v-model="details.email" class="form-control" id="email" placeholder="Enter New Email">
+                        </div><br>
+                        <div class="form-group">
+                            <label for="firstName" class="form-control">First Name</label>
+                            <input type="text" v-model="details.firstname" class="form-control" id="firstName" placeholder="Enter first name">
+                        </div><br>
+                        <div class="form-group">
+                            <label for="lastName" class="form-control">Last Name</label>
+                            <input type="text" v-model="details.lastname" class="form-control" id="lastName" placeholder="Enter last name">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-success" v-on:click="changeDetails(details)">Submit</button>
+                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Go back</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div><br><br>
+    <div>
+        <h1>Your saved films</h1>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Poster</th>
+                    <th scope="col">Film</th>
+                    <th scope="col">Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for film in films %}
+                <tr>
+                    <td><img src="{{ film.film.poster }}" width="300" height="400"></td>
+                    <td><a href="{% url 'selected' film.film.name %}">{{ film.film.name }}</a></td>
+                    <td>{{ film.film.avgscore }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    let myApp = Vue.createApp({
+        data() {
+            return {
+                pass: {
+                    currentpass: null,
+                    newpass1: null,
+                    newpass2: null
+                },
+                details: {
+                    username: null,
+                    email: null,
+                    firstname: null,
+                    lastname: null
+                }
+            }
+        },
+        methods: {
+            async changePassword(pass) {
+                let response = await fetch("{% url 'changepass' %}", {
+                    method: "PUT",
+                    body: JSON.stringify({
+                        currentpass: pass.currentpass,
+                        newpass1: pass.newpass1,
+                        newpass2: pass.newpass2
+                    }),
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken").value,
+                    },
+                });
+
+                if (response.ok) {
+                    console.log(this.pass);
+                    this.pass = {
+                        currentpass: null,
+                        newpass1: null,
+                        newpass2: null
+                    };
+                    console.log(this.pass);
+                    alert("Password successfully changed");
+                } else {
+                    alert("Something went wrong with changing the password");
+                }
+            },
+            async changeDetails() {
+                let response = await fetch("{% url 'changeinfo' %}", {
+                    method: "PUT",
+                    body: JSON.stringify({
+                        username: this.details.username,
+                        email: this.details.email,
+                        firstname: this.details.firstname,
+                        lastname: this.details.lastname
+                    }),
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken").value,
+                    },
+                });
+
+                if (response.ok) {
+                    console.log(this.details);
+                    this.details = {
+                        username: null,
+                        email: null,
+                        firstname: null,
+                        lastname: null
+                    };
+                    console.log(this.details);
+                    alert("The details you wanted have successfully changed");
+                } else {
+                    alert("Something went wrong with changing the given details");
+                }
+            }
+        }
+    });
+
+    myApp.mount('#app');
+
+</script>
+
+
+{% endblock %}

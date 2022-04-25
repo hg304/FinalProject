@@ -1,0 +1,475 @@
+{% extends 'base.html' %}
+{% block title %}Home{% endblock %}
+{% block content %}
+<style>
+    .container {
+      display: flex;
+      align-items: center;
+      justify-content: center
+    }
+    img {
+      max-width: 100%;
+      margin-right: 10%;
+    }
+    .image {
+      flex-basis: 40%;
+    }
+    .text {
+      font-size: 20px;
+      padding-left: 20px;
+    }
+</style>
+
+<div v-if="film != null && flag == true" class="image">
+    <h1>[[ film.film.name ]]</h1><br/>
+    <div>
+        <h5>View Reviews</h5>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#userModal">
+            View Recent User Reviews on other sites
+        </button>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#criticModal">
+            View Recent Critic Reviews from other sites
+        </button>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#userreviewModal">
+            View User Reviews
+        </button>
+    </div><br/>
+    <div>
+        <div>
+            <p>[[ film.film.consensus ]]</p>
+            <p>Combined Score: [[ film.film.avgScore ]]</p>
+            <div>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#scoreModal">
+                    View Score Breakdown
+                </button>
+
+                <div class="modal fade" id="scoreModal" tabindex="-1" aria-labelledby="scoreModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                        <h5 class="modal-title" id="scoreModalLabel">Score Breakdown</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <ul>
+                                <li>
+                                    Metascore: [[ film.film.scores.meta_critic ]]
+                                </li>
+                                <li>
+                                    Meta User Score: [[ film.film.scores.meta_user ]]
+                                </li>
+                                <li>
+                                    RT Tomatometer: [[ film.film.scores.rt_critic ]]
+                                </li>
+                                <li>
+                                    RT Audience Score: [[ film.film.scores.rt_audience ]]
+                                </li>
+                                <li>
+                                    IMDb Rating: [[ film.film.scores.imdb ]]
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Go back</button>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade bd-example-modal-lg" id="userModal" tabindex="-1" aria-labelledby="castModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+        <div class="modal-body row">
+            <div class="col md-6">
+                <div class="modal-header">
+                <h5 class="modal-title" id="userModalLabel">Rotten Tomatoes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h1>Recent Reviews</h1>
+                    <div v-for="(review, index) in film.recentreviews.rt_user">
+                        <div v-if="review == 'N/A'">
+                            <p><strong>No recent reviews could not be obtained from Rotten Tomatoes</strong></p>
+                        </div>
+                        <div v-else>
+                            <p><strong>Name: [[ review.user.userName ]]</strong></p>
+                            <p>Score: [[ review.score ]]</p>
+                            <p>Review: [[ review.review ]]</p>
+                        </div>
+                    </div>
+                    <a v-bind:href="this.rtuserurl">See more reviews at Rotten Tomatoes</a>
+                </div>
+            </div>
+            <div class="col md-6">
+                <div class="modal-header">
+                <h5 class="modal-title" id="userModalLabel">Rotten Tomatoes</h5>
+                </div>
+                <div class="modal-body">
+                    <h1>Recent Reviews</h1>
+                    <div v-for="(review, index) in film.recentreviews.meta_critic">
+                        <p><strong>Name: [[ review.name ]]</strong></p>
+                        <p>Score: [[ review.grade ]]</p>
+                        <p>Review: [[ review.body ]]</p>
+                    </div>
+                    <a v-bind:href="this.metauserurl">See more reviews at Metacritic</a>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Go back</button>
+        </div>
+        </div>
+        </div>
+    </div>
+    
+    <div class="modal fade bd-example-modal-lg" id="criticModal" tabindex="-1" aria-labelledby="castModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+        <div class="modal-body row">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="col md-6">
+                <div class="modal-header">
+                <h5 class="modal-title" id="criticModalLabel">Rotten Tomatoes</h5>
+                </div>
+                <div class="modal-body">
+                    <h1>Recent Reviews</h1>
+                    <div v-for="(review, index) in film.recentreviews.rt_critic">
+                        <div v-if="review == 'N/A'">
+                            <p><strong>No recent reviews could not be obtained from Rotten Tomatoes</strong></p>
+                        </div>
+                        <div v-else>
+                            <p><strong>Name: [[ review.name ]]</strong></p>
+                            <p>Score: [[ review.score ]]</p>
+                            <p>Review: [[ review.review ]]</p>
+                        </div>
+                    </div>
+                    <a v-bind:href="this.rtcriticurl">See more reviews at Rotten Tomatoes</a>
+                </div>
+            </div>
+            <div class="col md-6">
+                <div class="modal-header">
+                <h5 class="modal-title" id="criticModalLabel">Metacritic</h5>                
+                </div>
+                <div class="modal-body">
+                    <h1>Recent Reviews</h1>
+                    <div v-for="(review, index) in film.recentreviews.meta_user">
+                        <p><strong>Name: [[ review.name ]]</strong></p>
+                        <p>Score: [[ review.grade ]]</p>
+                        <p>Review: [[ review.body ]]</p>
+                    </div>
+                    <a v-bind:href="this.metacriticurl">See more reviews at Metacritic</a>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Go back</button>
+        </div>
+        </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="userreviewModal" tabindex="-1" aria-labelledby="userreviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+            <h5 class="modal-title" id="userreviewModalLabel">Reviews</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div v-if="film.reviews.length != 0" v-for="(review, index) in film.reviews">
+                    <p>[[ review.title ]]</p>
+                    <p>Rating: [[ review.rating ]]</p>
+                    <p>[[ review.description ]]</p>
+                    <p><strong>Posted by [[ review.reviewer ]] on [[ review.date ]]</strong></p><br/>
+                </div>
+                <div v-else>
+                    <p><strong>No reviews have been posted for this movie</strong></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Go back</button>
+            </div>
+        </div>
+        </div>
+    </div><br/><br/>
+    
+    <div style="float:left; left:500px; padding: 10px;">
+        <img :src="film.film.poster" alt="film poster" width="400" height="600">
+    </div>
+
+    <aside style="float:right; right: 500px; padding: 10px; overflow: hidden;">
+        <div>
+            <h5>View Film Information</h5>
+            <p style="overflow-wrap: break-word;">[[ film.film.plot ]]</p><br/>
+
+            <div>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#castModal">
+                    View Cast
+                </button>
+            </div><br><br>
+            
+            <div class="modal fade" id="castModal" tabindex="-1" aria-labelledby="castModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                    <h5 class="modal-title" id="castModalLabel">Film Cast</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <h1>Director(s)</h1>
+                        <ul>
+                            <li v-for="(director, index) in film.film.directors">
+                                [[ director ]]
+                            </li>
+                        </ul><br>
+                        <h1>Cast</h1>
+                        <ul>
+                            <li v-for="(actor, index) in film.film.cast">
+                                [[ actor ]]
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Go back</button>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+        <div>
+            <div>
+                <h5>Streaming Availability</h5>
+                <div v-if="film.streaming.length != 0" v-for="(stream, index) in film.streaming">
+                    <div v-if="stream.service == 'Netflix'">
+                        <a v-bind:href="stream.web_url"><button class="btn btn-danger">Watch on [[ stream.service ]]</button></a>
+                    </div>
+                    <div v-if="stream.service == 'Prime Video'">
+                        <a v-bind:href="stream.web_url"><button class="btn btn-info">Watch on [[ stream.service ]]</button></a>
+                    </div>
+                    <div v-if="stream.service == 'NOW TV'">
+                        <a v-bind:href="stream.web_url"><button class="btn btn-warning">Watch on [[ stream.service ]]</button></a>
+                    </div>
+                    <div v-if="stream.service == 'Disney+'">
+                        <a v-bind:href="stream.web_url"><button class="btn btn-primary">Watch on [[ stream.service ]]</button></a>
+                    </div>
+                </div>
+                <div v-else>
+                    <p>No streaming services show this film.</p>
+                </div>
+            </div><br>
+            <div>
+                <h5>Trailer</h5>
+                <iframe width="420" height="315" v-bind:src="film.film.trailer"></iframe>
+            </div>
+        </div>
+    </aside><br/><br/>
+
+    <footer style="bottom: -500px;">
+        <div style="float: left;">
+            {% if user.is_authenticated %}
+                <div>
+                    <button type="button" class="btn btn-primary" v-if="film.inUserList == true" v-on:click="removeFilmFromList(filmname)">Remove from saved films</button><button type="button" class="btn btn-primary" v-else v-on:click="addFilmToList(filmname)">Add to saved films</button>
+                </div>
+                {% else %}
+                <div>
+                    <p>You should be logged in to be able to save films to your list.</p>
+                </div>
+            {% endif %}
+            <br/><div>
+                {% if user.is_authenticated %}
+                <p>Add your review:</p>
+                <form>
+                    {% csrf_token %}
+                    <input class="form-control me-2" type="text" name="title" placeholder="Title:" id="reviewtitle">
+                    <input class="form-control me-2" type="number" name="rating" placeholder="Rating:" id="reviewrating">
+                    <input class="form-control me-2" type="text" name="description" placeholder="Describe your review:" id="reviewdescription">
+                    <button type="button" class="btn btn-success" v-on:click="postReview($event)">Post Review</button>
+                </form><br>
+                {% else %}
+                <p>You must be logged in to be able to post a review</p><br>
+                {% endif %}
+            </div><br/>
+        </div>
+        <div style="float: right; right: 150px">
+            <form>
+                {% csrf_token %}
+                <label for="#search">Enter Film name:</label>
+                <input class="form-control me-2" type="text" v-model="filmname" placeholder="Search" id="film" aria-label="Search">
+                <button type="button" class="btn btn-outline-success" v-on:click="getFilmInfo(filmname)">Search</button>
+            </form>
+        </div>
+</footer>
+</div>
+<div v-else-if="film == null && flag == true">
+    <h1>Please wait....</h1>
+    <p>Film searched is fetching...</p>
+</div>
+<div v-else>
+    <form>
+        {% csrf_token %}
+        <label for="#search">Enter Film name:</label>
+        <input class="form-control me-2" type="text" v-model="filmname" placeholder="Search" id="film" aria-label="Search">
+        <button type="button" class="btn btn-outline-success" v-on:click="getFilmInfo(filmname)">Search</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let myApp = Vue.createApp({
+        delimiters: ["[[", "]]"],
+        data() {
+            return {
+                film: null,
+                flag: false,
+                filmname: "{{ name }}",
+                metacriticurl: null,
+                rtcriticurl: null,
+                metauserurl: null,
+                rtuserurl: null,
+                reviews: []
+            }
+        },
+        async mounted() {
+            console.log(this.filmname);
+            if (this.filmname) {
+                await this.getFilmInfo(this.filmname)
+            }
+        },
+        methods: {
+            async getFilmInfo(filmname) {
+                this.flag = true
+                this.film = null;
+                let response = await fetch("{% url 'getinfo' %}", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        name: filmname,
+                    }),
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken").value,
+                    },
+                });
+
+                if (response.ok) {
+                    let data = await response.json();
+                    this.film = data;
+                    console.log(this.film)
+                    this.film.streaming.filter(stream => stream.type == "sub");
+                    const metastart = "https://www.metacritic.com/movie/";
+                    const rtstart = "https://www.rottentomatoes.com/m/";
+                    let metaend = filmname.toLowerCase().replace(" ", "-");
+                    let rtend = filmname.toLowerCase().replace(" ", "_");
+                    this.metacriticurl = metastart + metaend + "/critic-reviews";
+                    this.rtcriticurl = rtstart + rtend + "/reviews";
+                    this.metauserurl = metastart + metaend + "/user-reviews";
+                    this.rtuserurl = rtstart + rtend + "/reviews?type=user";
+                } else {
+                    this.flag = false;
+                    alert("Film could not be found");
+                }
+            },
+            async getReviews() {
+                let response = await fetch("{% url 'getreviews' %}", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        film: this.filmname
+                    }),
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken").value,
+                    },
+                });
+                if (response.ok){
+                    let data = await response.json();
+                    console.log(data)
+                    this.reviews = data.reviews;
+                }
+            },
+            async postReview() {
+                const title = document.getElementById("reviewtitle").value;
+                const rating = document.getElementById("reviewrating").value;
+                const description = document.getElementById("reviewdescription").value;
+                const today = new Date();
+                const day = String(today.getDate()).padStart(2, '0');
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const year = today.getFullYear();
+                const date = year + '-' + month + '-' + day;
+
+                let response = await fetch("{% url 'postreview' %}", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        title: title,
+                        rating: rating,
+                        description: description,
+                        date: date,
+                        reviewer: "{{ user.get_username }}",
+                        film: this.film.film.name
+                    }),
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken").value,
+                    },
+                });
+                if (response.ok){
+                    let data = await response.json();
+                    console.log(data)
+                    await this.getReviews(this.filmname);
+                } else {
+                    alert("Review failed to be added");
+                }
+            },
+            async addFilmToList(filmname) {
+                let response = await fetch("{% url 'addtosaved' %}", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        name: filmname,
+                        username: "{{ user.get_username }}"
+                    }),
+                    headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken").value
+                    }
+                });
+
+                if (response.ok) {
+                    let data = await response.json();
+                    console.log(data);
+                    await this.updateList();
+                }
+            },
+            async removeFilmFromList(filmname) {
+                let response = await fetch("{% url 'removefromsaved' %}", {
+                    method: "DELETE",
+                    body: JSON.stringify({
+                        name: filmname,
+                        username: "{{ user.get_username }}"
+                    }),
+                    headers: {
+                    "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken").value
+                    }
+                });
+
+                if (response.ok) {
+                    let data = await response.json();
+                    this.film.inUserList = data.inUserList;
+                    console.log(data);
+                }
+            },
+            async updateList() {
+                let response = await fetch("{% url 'getnewlist' %}");
+                if (response.ok) {
+                    let data = await response.json();
+                    this.film.inUserList = data.inUserList;
+                    console.log(this.film);
+                }
+            }
+        }
+    });
+
+    myApp.mount('#app');
+</script>
+{% endblock %}
