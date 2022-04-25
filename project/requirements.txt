@@ -5,3 +5,10 @@ psycopg2-binary==2.8.5
 pytz==2020.1
 sqlparse==0.3.1
 whitenoise==5.1.0
+rotten-tomatoes-scraper==1.4.0
+rotten_tomatoes_client==0.0.3
+IMDbPY==2021.4.18
+wheel==0.37.1
+google-api-core==2.5.0
+google-api-python-client==2.39.0
+bs4 == 0.0.1
