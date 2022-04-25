@@ -8,16 +8,33 @@ from .forms import LogInForm, SignUpForm
 
 def home_view(request):
     visited = RecentlyVisited.objects.all()
+    sorted = visited.order_by('-recentDate')
+    first4 = []
+    i = 0
+    for film in sorted:
+        temp = film
+        if i < 4:
+            first4.append(temp)
+            i += 1
+        else:
+            break
+
     filmswithuser = []
-    for film in visited:
+    i = 0
+    for film in sorted:
         temp = film
         users = temp.get_users()
-        for user in users:
-            if user == request.user.username:
-                filmswithuser.append(temp)
+        if i < 4:
+            for user in users:
+                if user == request.user.username:
+                    filmswithuser.append(temp)
+                    i += 1
+        else:
+            break
+
     return render(request, 'home.html', 
     {
-        'visited': visited,
+        'visited': first4,
         'userVisited': filmswithuser
     })
 
