@@ -36,8 +36,13 @@
     </div><br/>
     <div>
         <div>
-            <p>[[ film.film.consensus ]]</p>
-            <p>Combined Score: [[ film.film.avgScore ]]</p>
+            <div v-if="this.scoremissing == false">
+                <p>[[ film.film.consensus ]]</p>
+                <p>Combined Score: [[ film.film.avgScore ]]</p>
+            </div>
+            <div v-else>
+                <p>One or more information is missing to get the combined score</p>
+            </div>
             <div>
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#scoreModal">
                     View Score Breakdown
@@ -330,6 +335,7 @@
                 rtcriticurl: null,
                 metauserurl: null,
                 rtuserurl: null,
+                scoremissing: false,
                 reviews: []
             }
         },
@@ -367,6 +373,9 @@
                     this.rtcriticurl = rtstart + rtend + "/reviews";
                     this.metauserurl = metastart + metaend + "/user-reviews";
                     this.rtuserurl = rtstart + rtend + "/reviews?type=user";
+                    if ((this.film.film.scores.meta_user == 0) || (this.film.film.scores.meta_critic == 0) || (this.film.film.scores.rt_critic == 0) || (this.film.film.scores.rt_audience == 0)) {
+                        this.scoremissing = true;
+                    }
                 } else {
                     this.flag = false;
                     alert("Film could not be found");

@@ -2,14 +2,14 @@ import json
 import time
 from markupsafe import re
 import requests
-import os
 import googleapiclient.discovery
+import difflib
+import string
 from datetime import datetime
 from imdb import IMDb
 from rotten_tomatoes_scraper.rt_scraper import MovieScraper
-from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
-from django.shortcuts import redirect
-from django.urls import reverse
+from django.http import HttpResponseBadRequest, JsonResponse
+from soupsieve import closest
 from .models import AppReview, Account, Film, RecentlyVisited, SavedFilm, RecentReviews
 
 def change_password(request):
@@ -68,10 +68,13 @@ def search_movie(request):
         ia = IMDb()
         POST = json.loads(request.body)
         name = POST['name']
+        existingfilms = []
+        matchedname = closest_matched_film(name)
+
         exist = False
         storedfilm = None
         for film in Film.objects.all():
-            if film.name.lower() == name.lower():
+            if film.name.lower() == matchedname.lower():
                 storedfilm = film
                 exist = True
                 break
@@ -89,19 +92,29 @@ def search_movie(request):
         else:
             search = ia.search_movie(name)
             id = search[0].movieID
-            film = get_movie(id, name)
-            filmlowercase = ia.get_movie(id)['localized title'].lower()
-            stream_avail = get_streaming_availability(name)
-            reviews = get_user_reviews(filmlowercase)
-            trailer = get_trailer(name)
+            filmname = ia.get_movie(id)['title']
+            temp = None
+            for i in range(len(filmname)):
+                if i+1 != None:
+                    if filmname[i] in string.punctuation and filmname[i+1] != " ":
+                        temp = filmname[:i+1] + " " + filmname[i+1:]
+                    
+                    if temp == None:
+                        temp = filmname
+
+            filmnameNoPunc = temp.translate(str.maketrans('','', string.punctuation))
+            film = get_movie(id, filmnameNoPunc)
+            stream_avail = get_streaming_availability(filmname)
+            reviews = get_user_reviews(filmname.lower())
+            trailer = get_trailer(filmnameNoPunc)
             meta = film['meta_reviews']
             meta_user = film['meta_user_reviews']
             film['trailer'] = f"https://www.youtube.com/embed/{trailer['items'][0]['id']['videoId']}"
             film.pop('meta_reviews')
             film.pop('meta_user_reviews')
             save_film(film)
-            set_recently_visited(request, name)
-            recentreviews = get_recent_reviews(name, meta, meta_user)
+            set_recently_visited(request, filmname)
+            recentreviews = get_recent_reviews(filmnameNoPunc, meta, meta_user)
 
             return JsonResponse({
                 'film': film,
@@ -110,6 +123,19 @@ def search_movie(request):
                 'streaming': stream_avail,
                 'inUserList': False
             })
+
+def closest_matched_film(name):
+    if len(Film.objects.all()) != 0:
+            existingfilms = []
+            for film in Film.objects.all():
+                existingfilms.append(film.name)
+            closest = difflib.get_close_matches(name, existingfilms, cutoff=0.6)
+            if len(closest) > 0:
+                return closest[0]
+            else:
+                return "a"
+    else:
+        return "a"
 
 def set_recently_visited(request, name):
     temp = None
@@ -294,8 +320,18 @@ def get_movie(filmid, name):
     scores['rt_audience'] = rtapi.metadata['Score_Audience']
     scores['imdb'] = movie['rating']
     avgScore = 0
+    avgUserScore = 0
+    avgCriticScore = 0
     i = 0
 
+    if scores['meta_user'] == '':
+        scores['meta_user'] = 0
+    if scores['meta_critic'] == '':
+        scores['meta_critic'] = 0
+    if scores['rt_critic'] == '':
+        scores['rt_critic'] = 0
+    if scores['rt_audience'] == '':
+        scores['rt_audience'] = 0
     avgUserScore = int(float(scores['meta_user']*10) + int(scores['rt_audience']) + float(scores['imdb']*10)) / 3
     avgCriticScore = int(int(scores['meta_critic']) + int(scores['rt_critic'])) / 2
 
@@ -495,11 +531,14 @@ def get_streaming_availability(name):
         if arr[i]['type'] == "sub":
             if "netflix" in arr[i]['web_url']:
                 arr[i]['service'] = "Netflix"
+                filtered.append(arr[i])
             if "disneyplus" in arr[i]['web_url']:
                 arr[i]['service'] = "Disney+"
+                filtered.append(arr[i])
             if "amazon" in arr[i]['web_url']:
                 arr[i]['service'] = "Prime Video"
-            filtered.append(arr[i])
+                filtered.append(arr[i])
+            
 
     return filtered
 
