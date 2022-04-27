@@ -88,10 +88,10 @@
         <div class="modal-dialog modal-lg">
         <div class="modal-content">
         <div class="modal-body row">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             <div class="col md-6">
                 <div class="modal-header">
                 <h5 class="modal-title" id="userModalLabel">Rotten Tomatoes</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <h1>Recent Reviews</h1>
@@ -267,13 +267,13 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <h1>Director(s)</h1>
+                        <h5>Director(s)</h5>
                         <ul>
                             <li v-for="(director, index) in film.film.directors">
                                 [[ director ]]
                             </li>
-                        </ul><br>
-                        <h1>Cast</h1>
+                        </ul>
+                        <h5>Cast</h5>
                         <ul>
                             <li v-for="(actor, index) in film.film.cast">
                                 [[ actor ]]

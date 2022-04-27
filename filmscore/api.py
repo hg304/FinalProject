@@ -5,6 +5,8 @@ import requests
 import googleapiclient.discovery
 import difflib
 import string
+
+from django.db.utils import IntegrityError
 from datetime import datetime
 from imdb import IMDb
 from rotten_tomatoes_scraper.rt_scraper import MovieScraper
@@ -81,7 +83,6 @@ def search_movie(request):
         if exist == True:
             film = storedfilm
             info = get_cached_film_info(film)
-            set_recently_visited(request, name)
             if request.user.is_authenticated:
                 flag = check_if_film_list(request, film.name)
                 info['inUserList'] = flag
@@ -114,7 +115,7 @@ def search_movie(request):
             film.pop('meta_user_reviews')
             save_film(film)
             set_recently_visited(request, filmname)
-            recentreviews = get_recent_reviews(filmnameNoPunc, meta, meta_user, film['year'])
+            recentreviews = get_recent_reviews(filmname, filmnameNoPunc, meta, meta_user, film['year'])
 
             return JsonResponse({
                 'film': film,
@@ -317,13 +318,22 @@ def get_movie(filmid, name):
         genres.append(genre)
     
     age = "N/A"
-    for i in range(len(movie['certificates'])):
-        if "United Kingdom" in movie['certificates'][i]:
-            if "(DVD rating)" in movie['certificates'][i]:
-                pass
-            else:
-                age = movie['certificates'][i].strip('United Kingdom:')
+    try:
+        for i in range(len(movie['certificates'])):
+            if "United Kingdom" in movie['certificates'][i]:
+                if "(DVD rating)" in movie['certificates'][i]:
+                    pass
+                else:
+                    age = movie['certificates'][i].strip('United Kingdom:')
+    except KeyError:
+        pass
     
+    boxoffice = "N/A"
+    try:
+        boxoffice = movie['box office']['Cumulative Worldwide Gross']
+    except KeyError:
+        pass
+
     scores['rt_critic'] = rtapi.metadata['Score_Rotten']
     scores['rt_audience'] = rtapi.metadata['Score_Audience']
     scores['imdb'] = movie['rating']
@@ -338,7 +348,7 @@ def get_movie(filmid, name):
         scores['meta_user'] = 0
              
     try:
-        scores['meta_critic'] = metaapi['metaScore'] / 10
+        scores['meta_critic'] = metaapi['metaScore']
     except (KeyError, TypeError) as e:
         scores['meta_critic'] = 0
 
@@ -370,30 +380,57 @@ def get_movie(filmid, name):
     else:
         consensus = "Both the sides don't like this film! Maybe you should think twice about seeing this film....."
 
-    filmdetails = {
-        'name': movie['title'],
-        'avgScore': round(avgScore),
-        'avgUserScore': round(avgUserScore),
-        'avgCriticScore': round(avgCriticScore),
-        'scores': scores,
-        'year': year,
-        'cast': cast,
-        'directors': directors,
-        'poster': movie['full-size cover url'],
-        'consensus': consensus,
-        'filminfo': {
-            'plot': movie['plot'][0],
-            'genres': genres,
-            'boxoffice': movie['box office']['Cumulative Worldwide Gross'],
-            'languages': movie['languages'],
-            'firstrelease': movie['original air date'],
-            'countriesfilmed': movie['countries'],
-            'runtime': movie['runtimes'][0],
-            'agerating': age
-        },
-        'meta_reviews': metaapi['recentReviews'],
-        'meta_user_reviews': metaapi['recentUserReviews']
-    }
+    filmdetails = {}
+    try:
+        filmdetails = {
+            'name': movie['title'],
+            'avgScore': round(avgScore),
+            'avgUserScore': round(avgUserScore),
+            'avgCriticScore': round(avgCriticScore),
+            'scores': scores,
+            'year': year,
+            'cast': cast,
+            'directors': directors,
+            'poster': movie['full-size cover url'],
+            'consensus': consensus,
+            'filminfo': {
+                'plot': movie['plot'][0],
+                'genres': genres,
+                'boxoffice': boxoffice,
+                'languages': movie['languages'],
+                'firstrelease': movie['original air date'],
+                'countriesfilmed': movie['countries'],
+                'runtime': movie['runtimes'][0],
+                'agerating': age
+            },
+            'meta_reviews': metaapi['recentReviews'],
+            'meta_user_reviews': metaapi['recentUserReviews']
+        }
+    except KeyError:
+        filmdetails = {
+            'name': movie['title'],
+            'avgScore': round(avgScore),
+            'avgUserScore': round(avgUserScore),
+            'avgCriticScore': round(avgCriticScore),
+            'scores': scores,
+            'year': year,
+            'cast': cast,
+            'directors': directors,
+            'poster': movie['full-size cover url'],
+            'consensus': consensus,
+            'filminfo': {
+                'plot': movie['plot'][0],
+                'genres': genres,
+                'boxoffice': movie['box office']['Cumulative Worldwide Gross'],
+                'languages': movie['languages'],
+                'firstrelease': movie['original air date'],
+                'countriesfilmed': movie['countries'],
+                'runtime': movie['runtimes'][0],
+                'agerating': age
+            },
+            'meta_reviews': [],
+            'meta_user_reviews': []
+        }
 
     return filmdetails
 
@@ -484,8 +521,8 @@ def remove_from_saved_films(request):
                     'inUserList': False
                 })
 
-def get_recent_reviews(name, meta, metauser, year):
-    rtreviews = get_recent_rt_reviews(name, year)
+def get_recent_reviews(name, nameNoPunc, meta, metauser, year):
+    rtreviews = get_recent_rt_reviews(nameNoPunc, year)
 
     rt = rtreviews['recentReviews']
     rtuser = rtreviews['recentUserReviews']

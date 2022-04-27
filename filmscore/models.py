@@ -10,7 +10,6 @@ class Account(AbstractUser):
         return self.username
 
 class Film(models.Model):
-    id = models.IntegerField(null=True)
     name = models.CharField(max_length=200, primary_key=True)
     poster = models.CharField(max_length=1000)
     year = models.IntegerField()
