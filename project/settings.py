@@ -34,7 +34,7 @@ GRAPH_MODELS = {
     'group_models': True,
 }
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = '*'
 
 CORS_ALLOW_CREDENTIALS = True
 
