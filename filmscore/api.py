@@ -332,15 +332,15 @@ def get_movie(filmid, name):
     avgCriticScore = 0
     i = 0
 
-    if 'meta_user' in scores or scores['meta_user'] == None:
-        scores['meta_user'] = 0
-    else:
+    try:
         scores['meta_user'] = metaapi['userScore'] / 10
-        
-    if 'meta_critic' in scores or scores['meta_user'] == None:
+    except KeyError:
+        scores['meta_user'] = 0
+             
+    try:
+        scores['meta_critic'] = metaapi['metaScore'] / 10
+    except KeyError:
         scores['meta_critic'] = 0
-    else:
-        scores['meta_critic'] = metaapi['metaScore']
 
     if scores['rt_critic'] == '':
         scores['rt_critic'] = 0
