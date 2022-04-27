@@ -358,7 +358,7 @@ def get_movie(filmid, name):
         scores['rt_audience'] = 0
 
     avgUserScore = int(float(scores['meta_user']*10) + int(scores['rt_audience']) + float(scores['imdb']*10)) / 3
-    avgCriticScore = int(int(scores['meta_critic']) + int(scores['rt_critic'])) / 2
+    avgCriticScore = (int(scores['meta_critic']) + int(scores['rt_critic'])) / 2
 
     for value in scores.values():
         if isinstance(value, float):
