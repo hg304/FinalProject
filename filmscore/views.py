@@ -24,13 +24,10 @@ def home_view(request):
     for film in sorted:
         temp = film
         users = temp.get_users()
-        if i < 4:
-            for user in users:
-                if user == request.user.username:
-                    filmswithuser.append(temp)
-                    i += 1
-        else:
-            break
+        for user in users:
+            if user == request.user.username:
+                filmswithuser.append(temp)
+                i += 1
 
     return render(request, 'home.html', 
     {
