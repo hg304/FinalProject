@@ -334,12 +334,12 @@ def get_movie(filmid, name):
 
     try:
         scores['meta_user'] = metaapi['userScore'] / 10
-    except KeyError:
+    except (KeyError, TypeError) as e:
         scores['meta_user'] = 0
              
     try:
         scores['meta_critic'] = metaapi['metaScore'] / 10
-    except KeyError:
+    except (KeyError, TypeError) as e:
         scores['meta_critic'] = 0
 
     if scores['rt_critic'] == '':
