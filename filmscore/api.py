@@ -114,7 +114,7 @@ def search_movie(request):
             film.pop('meta_user_reviews')
             save_film(film)
             set_recently_visited(request, filmname)
-            recentreviews = get_recent_reviews(filmnameNoPunc, meta, meta_user)
+            recentreviews = get_recent_reviews(filmnameNoPunc, meta, meta_user, film['year'])
 
             return JsonResponse({
                 'film': film,
@@ -218,7 +218,8 @@ def save_film(film):
     cachefilm.imdbscore = film['scores']['imdb']
     cachefilm.trailer = film['trailer']
     cachefilm.consensus = film['consensus']
-    cachefilm.plot = film['plot']
+    cachefilm.filminfo = film['filminfo']
+    cachefilm.year = film['year']
     cachefilm.people = people
     cachefilm.cached = cached
 
@@ -295,6 +296,7 @@ def get_movie(filmid, name):
     ia = IMDb()
 
     movie = ia.get_movie(filmid)
+    year = movie['year']
     cast = []
     directors = []
     genres = []
@@ -313,6 +315,14 @@ def get_movie(filmid, name):
     
     for genre in movie['genres']:
         genres.append(genre)
+    
+    age = "N/A"
+    for i in range(len(movie['certificates'])):
+        if "United Kingdom" in movie['certificates'][i]:
+            if "(DVD rating)" in movie['certificates'][i]:
+                pass
+            else:
+                age = movie['certificates'][i].strip('United Kingdom:')
     
     scores['meta_critic'] = metaapi['metaScore']
     scores['meta_user'] = metaapi['userScore'] / 10
@@ -361,12 +371,21 @@ def get_movie(filmid, name):
         'avgUserScore': round(avgUserScore),
         'avgCriticScore': round(avgCriticScore),
         'scores': scores,
+        'year': year,
         'cast': cast,
         'directors': directors,
-        'genres': genres,
         'poster': movie['full-size cover url'],
         'consensus': consensus,
-        'plot': movie['plot'][0],
+        'filminfo': {
+            'plot': movie['plot'][0],
+            'genres': genres,
+            'boxoffice': movie['box office']['Cumulative Worldwide Gross'],
+            'languages': movie['languages'],
+            'firstrelease': movie['original air date'],
+            'countriesfilmed': movie['countries'],
+            'runtime': movie['runtimes'][0],
+            'agerating': age
+        },
         'meta_reviews': metaapi['recentReviews'],
         'meta_user_reviews': metaapi['recentUserReviews']
     }
@@ -460,8 +479,8 @@ def remove_from_saved_films(request):
                     'inUserList': False
                 })
 
-def get_recent_reviews(name, meta, metauser):
-    rtreviews = get_recent_rt_reviews(name)
+def get_recent_reviews(name, meta, metauser, year):
+    rtreviews = get_recent_rt_reviews(name, year)
 
     rt = rtreviews['recentReviews']
     rtuser = rtreviews['recentUserReviews']
@@ -561,12 +580,22 @@ def get_metacritic_scores(name):
 
     return res
 
-def get_recent_rt_reviews(name):
+def get_recent_rt_reviews(name, year):
     namelow = name.lower()
     formatted = namelow.replace(" ", "_")
+    id = 0
 
     result = requests.get(f"https://www.rottentomatoes.com/m/{formatted}/")
-    id = re.findall(r'(?<=rtId":")(.*)(?=","type)',result.text)[0]
+
+    if len(re.findall(r'(?<=rtId":")(.*)(?=","type)',result.text)) == 0:
+        time.sleep(2)
+        formatted = f"{formatted}_{year}"
+        result = requests.get(f"https://www.rottentomatoes.com/m/{formatted}/")
+        id = re.findall(r'(?<=rtId":")(.*)(?=","type)',result.text)[0]
+
+    else:
+        time.sleep(2)
+        id = re.findall(r'(?<=rtId":")(.*)(?=","type)',result.text)[0]
 
     time.sleep(2)
 

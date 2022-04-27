@@ -13,6 +13,7 @@ class Film(models.Model):
     id = models.IntegerField(null=True)
     name = models.CharField(max_length=200, primary_key=True)
     poster = models.CharField(max_length=1000)
+    year = models.IntegerField()
     avgscore = models.IntegerField()
     avguserscore = models.IntegerField()
     avgcriticscore = models.IntegerField()
@@ -21,8 +22,8 @@ class Film(models.Model):
     rtcriticscore = models.IntegerField()
     rtaudiencescore = models.IntegerField()
     imdbscore = models.IntegerField()
+    filminfo = models.JSONField()
     consensus = models.TextField()
-    plot = models.CharField(max_length=2000)
     trailer = models.CharField(max_length=2000)
     people = models.JSONField()
     cached = models.DateField()
@@ -34,11 +35,12 @@ class Film(models.Model):
             'avgscore': self.avgscore,
             'metascore': self.metascore,
             'metauser': self.metauserscore,
+            'year': self.year,
             'rtcriticscore': self.rtcriticscore,
             'rtaudiencescore': self.rtaudiencescore,
             'imdbscore': self.imdbscore,
             'consensus': self.consensus,
-            'plot': self.plot,
+            'filminfo': self.filminfo,
             'trailer': self.trailer,
             'people': self.people,
             'cached': self.cached

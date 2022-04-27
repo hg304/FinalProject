@@ -114,7 +114,7 @@
                 </div>
                 <div class="modal-body">
                     <h1>Recent Reviews</h1>
-                    <div v-for="(review, index) in film.recentreviews.meta_critic">
+                    <div v-for="(review, index) in film.recentreviews.meta_user">
                         <p><strong>Name: [[ review.name ]]</strong></p>
                         <p>Score: [[ review.grade ]]</p>
                         <p>Review: [[ review.body ]]</p>
@@ -147,7 +147,7 @@
                         </div>
                         <div v-else>
                             <p><strong>Name: [[ review.name ]]</strong></p>
-                            <p>Score: [[ review.score ]]</p>
+                            <p>Score: [[ review.rating ]]</p>
                             <p>Review: [[ review.review ]]</p>
                         </div>
                     </div>
@@ -160,7 +160,7 @@
                 </div>
                 <div class="modal-body">
                     <h1>Recent Reviews</h1>
-                    <div v-for="(review, index) in film.recentreviews.meta_user">
+                    <div v-for="(review, index) in film.recentreviews.meta_critic">
                         <p><strong>Name: [[ review.name ]]</strong></p>
                         <p>Score: [[ review.grade ]]</p>
                         <p>Review: [[ review.body ]]</p>
@@ -207,15 +207,58 @@
 
     <aside style="float:right; right: 500px; padding: 10px; overflow: hidden;">
         <div>
-            <h5>View Film Information</h5>
-            <p style="overflow-wrap: break-word;">[[ film.film.plot ]]</p><br/>
+            <h3>View Film Information</h3>
+            <h5>Release Date</h5>
+            <p>[[ film.film.filminfo.firstrelease ]]</p>
+            <h5>Age Rating</h5>
+            <p>[[ film.film.filminfo.agerating ]]</p>
+            <h5>Plot</h5>
+            <p style="overflow-wrap: break-word;">[[ film.film.filminfo.plot ]]</p>
+            <h5>Genres</h5>
+            <ul v-for="(genre, index) in film.film.filminfo.genres">
+                <li>[[ genre ]]</li>
+            </ul>
 
             <div>
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#castModal">
                     View Cast
                 </button>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#infoModal">
+                    View additional information
+                </button>
             </div><br><br>
             
+            <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                    <h5 class="modal-title" id="infoModalLabel">Additional Film Info</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <h5>Languages</h5>
+                        <ul v-for="(language, index) in film.film.filminfo.languages">
+                            <li>
+                                [[ language ]]
+                            </li>
+                        </ul>
+                        <h5>Box Office</h5>
+                        <p>[[ film.film.filminfo.boxoffice ]]</p>
+                        <h5>Runtime</h5>
+                        <p>[[ film.film.filminfo.runtime ]] minutes</p> 
+                        <h5>Countries Filmed</h5>
+                        <ul v-for="(country, index) in film.film.filminfo.countriesfilmed">
+                            <li>
+                                [[ country ]]
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Go back</button>
+                    </div>
+                </div>
+                </div>
+            </div>
             <div class="modal fade" id="castModal" tabindex="-1" aria-labelledby="castModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
                 <div class="modal-content">
