@@ -34,7 +34,7 @@ GRAPH_MODELS = {
     'group_models': True,
 }
 
-ALLOWED_HOSTS = '*'
+ALLOWED_HOSTS = ['*']
 
 CORS_ALLOW_CREDENTIALS = True
 
@@ -43,14 +43,14 @@ CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 
 
-CSRF_TRUSTED_ORIGINS = ['https://filmscore-finalproj.apps.kube.eecs.qmul.ac.uk']
+CSRF_TRUSTED_ORIGINS = ['filmscore-finalproj.apps.kube.eecs.qmul.ac.uk']
 
 CORS_REPLACE_HTTPS_REFERER = True
 
-CSRF_COOKIE_DOMAIN = 'https://filmscore-finalproj.apps.kube.eecs.qmul.ac.uk'
+CSRF_COOKIE_DOMAIN = 'filmscore-finalproj.apps.kube.eecs.qmul.ac.uk'
 
 CORS_ORIGIN_WHITELIST = (
-    'https://filmscore-finalproj.apps.kube.eecs.qmul.ac.uk'
+    'filmscore-finalproj.apps.kube.eecs.qmul.ac.uk'
 )
 
 AUTH_USER_MODEL = 'filmscore.Account'
