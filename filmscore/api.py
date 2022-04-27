@@ -254,7 +254,7 @@ def get_cached_film_info(tempfilm):
         'directors': directors,
         'poster': tempfilm.poster,
         'consensus': tempfilm.consensus,
-        'plot': tempfilm.plot,
+        'filminfo': tempfilm.filminfo,
         'trailer': tempfilm.trailer
     }
 
