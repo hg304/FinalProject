@@ -332,12 +332,12 @@ def get_movie(filmid, name):
     avgCriticScore = 0
     i = 0
 
-    if scores['meta_user'] == '':
+    if 'meta_user' in scores:
         scores['meta_user'] = 0
     else:
         scores['meta_user'] = metaapi['userScore'] / 10
         
-    if scores['meta_critic'] == '':
+    if 'meta_critic' in scores:
         scores['meta_critic'] = 0
     else:
         scores['meta_critic'] = metaapi['metaScore']
@@ -346,7 +346,7 @@ def get_movie(filmid, name):
         scores['rt_critic'] = 0
     if scores['rt_audience'] == '':
         scores['rt_audience'] = 0
-        
+
     avgUserScore = int(float(scores['meta_user']*10) + int(scores['rt_audience']) + float(scores['imdb']*10)) / 3
     avgCriticScore = int(int(scores['meta_critic']) + int(scores['rt_critic'])) / 2
 
