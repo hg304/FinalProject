@@ -324,8 +324,6 @@ def get_movie(filmid, name):
             else:
                 age = movie['certificates'][i].strip('United Kingdom:')
     
-    scores['meta_critic'] = metaapi['metaScore']
-    scores['meta_user'] = metaapi['userScore'] / 10
     scores['rt_critic'] = rtapi.metadata['Score_Rotten']
     scores['rt_audience'] = rtapi.metadata['Score_Audience']
     scores['imdb'] = movie['rating']
@@ -336,12 +334,19 @@ def get_movie(filmid, name):
 
     if scores['meta_user'] == '':
         scores['meta_user'] = 0
+    else:
+        scores['meta_user'] = metaapi['userScore'] / 10
+        
     if scores['meta_critic'] == '':
         scores['meta_critic'] = 0
+    else:
+        scores['meta_critic'] = metaapi['metaScore']
+
     if scores['rt_critic'] == '':
         scores['rt_critic'] = 0
     if scores['rt_audience'] == '':
         scores['rt_audience'] = 0
+        
     avgUserScore = int(float(scores['meta_user']*10) + int(scores['rt_audience']) + float(scores['imdb']*10)) / 3
     avgCriticScore = int(int(scores['meta_critic']) + int(scores['rt_critic'])) / 2
 
