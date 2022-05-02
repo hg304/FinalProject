@@ -6,6 +6,11 @@ from django.contrib.auth import login, authenticate, logout
 from .models import Film, RecentlyVisited, SavedFilm
 from .forms import LogInForm, SignUpForm
 
+"""
+    View for the homepage, displays the recent films that have
+    been seen by users, and if logged in displays the recent
+    films the logged in user has seen
+"""
 def home_view(request):
     visited = RecentlyVisited.objects.all()
     sorted = visited.order_by('-recentDate')
@@ -35,12 +40,25 @@ def home_view(request):
         'userVisited': filmswithuser
     })
 
+"""
+    View for the film page where users can search for
+    films
+"""
 def film_view(request):
     return render(request, 'film.html', None)
 
+"""
+    View for the film page as well but is used when 
+    finding a film that was clicked on a different
+    page
+"""
 def selected_film_view(request, name):
     return render(request, 'film.html', {'name': name})
 
+"""
+    View for the profile page showing the user's information
+    and saved films if user is logged in
+"""
 def profile_view(request):
     films = SavedFilm.objects.all()
     filmswithuser = []
@@ -52,9 +70,15 @@ def profile_view(request):
                 filmswithuser.append(temp)
     return render(request, 'profile.html', {'films': filmswithuser})
 
+"""
+    View for seeing the top 100 films being searched so far online
+"""
 def top_films_view(request):
     return render(request, 'topfilms.html', None)
 
+"""
+    View for user to log in to their account in the application
+"""
 def login_view(request):
     error = False
     if request.method == "POST":
@@ -77,6 +101,9 @@ def login_view(request):
     }
     return render(request, 'login.html', context)
 
+"""
+    View for user to create an account for the application
+"""
 def signup_view(request):
     if request.method == "POST":
         form = SignUpForm(request.POST)
@@ -100,9 +127,16 @@ def signup_view(request):
         
     return render(request, 'signup.html', context)
 
+"""
+    View for logging out of account
+"""
 def log_out(request):
     logout(request)
     return redirect(reverse('home'))
 
+"""
+    Heartbeat check to see if application is working fine
+    and responsive for deployed app
+"""
 def health(request):
     return HttpResponse(Film.objects.count())

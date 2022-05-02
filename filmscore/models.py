@@ -1,6 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
+"""
+    Model representation of user accounts for the
+    application
+"""
+
 class Account(AbstractUser):
     email = models.EmailField(unique=True)
     firstName = models.CharField(max_length=50)
@@ -9,27 +14,32 @@ class Account(AbstractUser):
     def __str__(self):
         return self.username
 
+"""
+    Model representation of films that are cached in the system after
+    being searched the first time
+"""
 class Film(models.Model):
     name = models.CharField(max_length=200, primary_key=True)
+    imdbid = models.IntegerField()
     poster = models.CharField(max_length=1000)
     year = models.IntegerField()
     avgscore = models.IntegerField()
     avguserscore = models.IntegerField()
     avgcriticscore = models.IntegerField()
     metascore = models.IntegerField()
-    metauserscore = models.IntegerField()
+    metauserscore = models.FloatField()
     rtcriticscore = models.IntegerField()
     rtaudiencescore = models.IntegerField()
-    imdbscore = models.IntegerField()
+    imdbscore = models.FloatField()
     filminfo = models.JSONField()
     consensus = models.TextField()
     trailer = models.CharField(max_length=2000)
     people = models.JSONField()
-    cached = models.DateField()
 
     def to_dict(self):
         return {
             'name': self.name,
+            'imdbid': self.imdbid,
             'poster': self.poster,
             'avgscore': self.avgscore,
             'metascore': self.metascore,
@@ -41,11 +51,14 @@ class Film(models.Model):
             'consensus': self.consensus,
             'filminfo': self.filminfo,
             'trailer': self.trailer,
-            'people': self.people,
-            'cached': self.cached
+            'people': self.people
         }
 
-class RecentReviews(models.Model):
+"""
+    Model representation of recent critic reviews from other sources that are cached
+    for a given film when searched the first time
+"""
+class OnlineCriticandUserReviews(models.Model):
     rtcritic = models.JSONField()
     rtuser = models.JSONField()
     metauser = models.JSONField()
@@ -61,13 +74,15 @@ class RecentReviews(models.Model):
             "film": self.film
         }
 
-
+"""
+    Model representation of reviews for a film that are posted on the application
+"""
 class AppReview(models.Model):
     title = models.CharField(max_length=200)
     rating = models.IntegerField()
     description = models.TextField()
     reviewDate = models.DateField()
-    reviewer = models.ForeignKey(Account, to_field='username', on_delete=models.CASCADE)
+    reviewer = models.ForeignKey(Account, to_field='id', on_delete=models.CASCADE)
     film = models.ForeignKey(Film, to_field='name', on_delete=models.CASCADE)
 
     def __str__(self):
@@ -83,6 +98,10 @@ class AppReview(models.Model):
             'film': self.film.name
         }
 
+
+"""
+    Model representation of a film that has been saved to a user's film list
+"""
 class SavedFilm(models.Model):
     film = models.ForeignKey(Film, to_field='name', on_delete=models.CASCADE)
     userSaved = models.ManyToManyField(Account)
@@ -99,7 +118,11 @@ class SavedFilm(models.Model):
             'score': self.film.avgscore,
             'userSaved': self.get_users()
         }
-    
+
+"""
+    Model representation of the films that have been recently visited by the user
+    for the first time
+"""
 class RecentlyVisited(models.Model):
     film = models.ForeignKey(Film, to_field="name", on_delete=models.CASCADE)
     usersVisited = models.ManyToManyField(Account)

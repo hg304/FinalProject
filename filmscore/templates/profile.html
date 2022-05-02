@@ -24,6 +24,7 @@
                 </div>
                 <div class="modal-body">
                     <form>
+                        {% csrf_token %}
                         <div class="form-group">
                             <label for="currentPassword" class="form-control">Current Password</label>
                             <input type="password" v-model="pass.currentpass" class="form-control" id="currentPassword" placeholder="Enter Current Password">
@@ -55,6 +56,7 @@
                 </div>
                 <div class="modal-body">
                     <form>
+                        {% csrf_token %}
                         <div class="form-group">
                             <label for="username" class="form-control">Username</label>
                             <input type="text" v-model="details.username" class="form-control" id="username" placeholder="Enter New Username">
@@ -71,7 +73,7 @@
                             <label for="lastName" class="form-control">Last Name</label>
                             <input type="text" v-model="details.lastname" class="form-control" id="lastName" placeholder="Enter last name">
                         </div>
-                        <div class="modal-footer">
+                        <div class="form-group">
                             <button type="button" class="btn btn-success" v-on:click="changeDetails(details)">Submit</button>
                             <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Go back</button>
                         </div>
@@ -94,7 +96,7 @@
             <tbody>
                 {% for film in films %}
                 <tr>
-                    <td><img src="{{ film.film.poster }}" width="300" height="400"></td>
+                    <td><img src="{{ film.film.poster }}" width="130" height="200"></td>
                     <td><a href="{% url 'selected' film.film.name %}">{{ film.film.name }}</a></td>
                     <td>{{ film.film.avgscore }}</td>
                 </tr>
@@ -105,7 +107,7 @@
 </div>
 {% endblock %}
 
-{% block script %}
+{% block scripts %}
 <script>
     let myApp = Vue.createApp({
         data() {
@@ -126,7 +128,7 @@
         methods: {
             async changePassword(pass) {
                 let response = await fetch("{% url 'changepass' %}", {
-                    method: "PUT",
+                    method: "POST",
                     body: JSON.stringify({
                         currentpass: pass.currentpass,
                         newpass1: pass.newpass1,
@@ -151,9 +153,9 @@
                     alert("Something went wrong with changing the password");
                 }
             },
-            async changeDetails() {
+            async changeDetails(details) {
                 let response = await fetch("{% url 'changeinfo' %}", {
-                    method: "PUT",
+                    method: "POST",
                     body: JSON.stringify({
                         username: this.details.username,
                         email: this.details.email,

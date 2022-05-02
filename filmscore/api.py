@@ -6,27 +6,33 @@ import googleapiclient.discovery
 import difflib
 import string
 
-from django.db.utils import IntegrityError
-from datetime import datetime
+from django.contrib.auth.hashers import check_password, make_password
+from django.utils import timezone
 from imdb import IMDb
 from rotten_tomatoes_scraper.rt_scraper import MovieScraper
 from django.http import HttpResponseBadRequest, JsonResponse
-from soupsieve import closest
-from .models import AppReview, Account, Film, RecentlyVisited, SavedFilm, RecentReviews
+from .models import AppReview, Account, Film, OnlineCriticandUserReviews, RecentlyVisited, SavedFilm, OnlineCriticandUserReviews
 
+"""
+    Method that changes the password of the currently logged in user
+"""
 def change_password(request):
-    if request.method == "PUT":
+    if request.method == "POST":
         PUT = json.loads(request.body)
-        if PUT['currentpassword'] == request.user.password:
+        if check_password(PUT['currentpass'], request.user.password):
             if PUT['newpass1'] == PUT['newpass2']:
                 for user in Account.objects.all():
                     if request.user.username == user.username:
-                        user.password = PUT['newpass1']
+                        user.password = make_password(PUT['newpass1'])
+                        user.save()
                         return JsonResponse({})
         return HttpResponseBadRequest
 
+"""
+    Method that changes information about the currently logged in user
+"""
 def change_details(request):
-    if request.method == "PUT":
+    if request.method == "POST":
         PUT = json.loads(request.body)
         user = None
         for temp in Account.objects.all():
@@ -34,14 +40,16 @@ def change_details(request):
                 user = temp
                 break
         
-        if PUT['username'] != "":
+        if PUT['username'] != None:
             user.username = PUT['username']
-        if PUT['email'] != "":
+        if PUT['email'] != None:
             user.email = PUT['email']
-        if PUT['firstname'] != "":
+        if PUT['firstname'] != None:
             user.firstName = PUT['firstname']
-        if PUT['lastname'] != "":
+        if PUT['lastname'] != None:
             user.lastName = PUT['lastname']
+        
+        user.save()
         
         return JsonResponse({
             'username': user.username,
@@ -50,6 +58,9 @@ def change_details(request):
             'lastname': user.lastName
         })
 
+"""
+    Method that pulls the current top 100 movies online
+"""
 def get_popular_films(request):
     if request.method == "GET":
         ia = IMDb()
@@ -65,6 +76,10 @@ def get_popular_films(request):
             'films': cleaned
         })
 
+"""
+    Method that searches for a film entered by the user and sends the 
+    film information back to the user
+"""
 def search_movie(request):
     if request.method == "POST":
         ia = IMDb()
@@ -88,6 +103,7 @@ def search_movie(request):
                 info['inUserList'] = flag
             else:
                 info['inUserList'] = False
+            set_recently_visited(request, film.name)
             return JsonResponse(info)
 
         else:
@@ -105,7 +121,7 @@ def search_movie(request):
 
             filmnameNoPunc = temp.translate(str.maketrans('','', string.punctuation))
             film = get_movie(id, filmnameNoPunc)
-            stream_avail = get_streaming_availability(filmname)
+            stream_avail = get_streaming_availability(id)
             reviews = get_user_reviews(filmname.lower())
             trailer = get_trailer(filmnameNoPunc)
             meta = film['meta_reviews']
@@ -125,6 +141,10 @@ def search_movie(request):
                 'inUserList': False
             })
 
+"""
+    Method that takes the inputted word from user and matches the closest
+    related film to the name
+"""
 def closest_matched_film(name):
     if len(Film.objects.all()) != 0:
             existingfilms = []
@@ -138,6 +158,9 @@ def closest_matched_film(name):
     else:
         return "a"
 
+"""
+    Method that saves a film as the most recently visited film by a user
+"""
 def set_recently_visited(request, name):
     temp = None
     for film in Film.objects.all():
@@ -150,7 +173,8 @@ def set_recently_visited(request, name):
             if recent.film.name.lower() == temp.name.lower():
                 if request.user.is_authenticated:
                     recent.usersVisited.add(Account.objects.get(username=request.user.username))
-                recent.recentDate = datetime.now()
+                recent.recentDate = timezone.now()
+                recent.save()
                 flag = True
                 return JsonResponse({
                     'film': recent.film.to_dict(),
@@ -161,7 +185,7 @@ def set_recently_visited(request, name):
     if flag == False:
         recent = RecentlyVisited()
         recent.film = temp
-        recent.recentDate = datetime.now()
+        recent.recentDate = timezone.now()
         recent.save()
         if request.user.is_authenticated:
             recent.usersVisited.add(Account.objects.get(username=request.user.username))
@@ -172,7 +196,10 @@ def set_recently_visited(request, name):
             'recentDate': recent.recentDate
         })
         
-
+"""
+    Method that pulls the trailer of the searched film if being searched 
+    for the first time
+"""
 def get_trailer(name):
     # API information
     api_service_name = "youtube"
@@ -192,10 +219,12 @@ def get_trailer(name):
 
     return response
 
-
+"""
+    Method that caches the full information about a film in the database
+    when searched the first time so that it can be loaded faster when 
+    searched again
+"""
 def save_film(film):
-    time = datetime.now()
-    cached = datetime.strftime(time, '%Y-%m-%d')
     people = {
         'cast': [],
         'directors': []
@@ -208,6 +237,7 @@ def save_film(film):
     cachefilm = Film()
 
     cachefilm.name = film['name']
+    cachefilm.imdbid = film['imdbid']
     cachefilm.poster = film['poster']
     cachefilm.avgscore = film['avgScore']
     cachefilm.avgcriticscore = film['avgCriticScore']
@@ -222,11 +252,13 @@ def save_film(film):
     cachefilm.filminfo = film['filminfo']
     cachefilm.year = film['year']
     cachefilm.people = people
-    cachefilm.cached = cached
 
     cachefilm.save()
 
-
+"""
+    Method that will pull the film info from the database if the searched film
+    has been found in the database
+"""
 def get_cached_film_info(tempfilm):
     scores = {
         'meta_critic': tempfilm.metascore,
@@ -247,6 +279,7 @@ def get_cached_film_info(tempfilm):
 
     film = {
         'name': tempfilm.name,
+        'imdbid': tempfilm.imdbid,
         'avgScore': tempfilm.avgscore,
         'avgUserScore': tempfilm.avguserscore,
         'avgCriticScore': tempfilm.avgcriticscore,
@@ -259,7 +292,7 @@ def get_cached_film_info(tempfilm):
         'trailer': tempfilm.trailer
     }
 
-    stream_avail = get_streaming_availability(tempfilm.name)
+    stream_avail = get_streaming_availability(tempfilm.imdbid)
     reviews = get_user_reviews(tempfilm.name.lower())
     recentreviews = get_cached_recent(tempfilm.name)
 
@@ -270,6 +303,10 @@ def get_cached_film_info(tempfilm):
         'streaming': stream_avail
     }
 
+"""
+    Method that checks to see if the film exists in the user's film
+    list
+"""
 def check_if_film_list(request, name):
     temp = None
     for film in SavedFilm.objects.all():
@@ -287,12 +324,20 @@ def check_if_film_list(request, name):
                 return True
         return False
 
+"""
+    Method that returns the updated film list of the user after a film has
+    either been added to the list or removed from the list
+"""
 def get_updated_list(request):
     if request.method == "GET":
         return JsonResponse({
             'inUserList': True
         })
 
+"""
+    Method that will pull the information for the film if it is being
+    searched for the first time on the application 
+"""
 def get_movie(filmid, name):
     ia = IMDb()
 
@@ -384,6 +429,7 @@ def get_movie(filmid, name):
     try:
         filmdetails = {
             'name': movie['title'],
+            'imdbid': filmid,
             'avgScore': round(avgScore),
             'avgUserScore': round(avgUserScore),
             'avgCriticScore': round(avgCriticScore),
@@ -434,6 +480,10 @@ def get_movie(filmid, name):
 
     return filmdetails
 
+"""
+    Method that will pull the reviews that were posted by users
+    in the application
+"""
 def get_user_reviews(name):
     reviews = []
     for review in AppReview.objects.all():
@@ -443,6 +493,10 @@ def get_user_reviews(name):
     
     return reviews
 
+"""
+    Method that will return the updated list of user reviews for a 
+    film after a review has been posted for it
+"""
 def get_updated_user_reviews(request):
     if request.method == "POST":
         POST = json.loads(request.body)
@@ -450,6 +504,10 @@ def get_updated_user_reviews(request):
         reviews = get_user_reviews(name)
         return JsonResponse({"reviews": reviews})
 
+"""
+    Method that will post the review that has been entered by the user
+    in the application to the database for that film
+"""
 def post_review(request):
     if request.method == "POST":
         review = AppReview()
@@ -476,6 +534,9 @@ def post_review(request):
             'film': review.film.name
         })
 
+"""
+    Method to add a chosen film to a user's film list
+"""
 def add_to_saved_films(request):
     if request.method == "POST":
         temp = None
@@ -507,6 +568,9 @@ def add_to_saved_films(request):
             'usersSaved': savedfilm.get_users()
         })
 
+"""
+    Method to remove a chosen film from a user's film list
+"""
 def remove_from_saved_films(request):
     if request.method == "DELETE":
         DELETE = json.loads(request.body)
@@ -521,13 +585,17 @@ def remove_from_saved_films(request):
                     'inUserList': False
                 })
 
+"""
+    Method that will pull the recent reviews for both critic and audience from 
+    different sources for the chosen film
+"""
 def get_recent_reviews(name, nameNoPunc, meta, metauser, year):
     rtreviews = get_recent_rt_reviews(nameNoPunc, year)
 
     rt = rtreviews['recentReviews']
     rtuser = rtreviews['recentUserReviews']
 
-    recentrev = RecentReviews()
+    recentrev = OnlineCriticandUserReviews()
     recentrev.rtcritic = rt
     recentrev.rtuser = rtuser
     recentrev.metauser = meta
@@ -550,59 +618,49 @@ def get_recent_reviews(name, nameNoPunc, meta, metauser, year):
         "rt_user": rtuser
     }
 
+"""
+    Method that will pull the streaming service availability for a chosen
+    film
+"""
+def get_streaming_availability(id):
+    url = "https://streaming-availability.p.rapidapi.com/get/basic"
 
-def get_streaming_availability(name):
-    url = "https://watchmode.p.rapidapi.com/search/"
-
-    querystring = {
-        "search_field": "name",
-        "search_value":name
-    }
+    querystring = {"country":"GB","imdb_id":f"tt{id}","output_language":"EN"}
 
     headers = {
-        'x-rapidapi-host': "watchmode.p.rapidapi.com",
-        'x-rapidapi-key': "80fb906771mshb7adef84037faf5p1c2d1fjsn193b151cfb14"
-        }
+        "X-RapidAPI-Host": "streaming-availability.p.rapidapi.com",
+        "X-RapidAPI-Key": "80fb906771mshb7adef84037faf5p1c2d1fjsn193b151cfb14"
+    }
 
     response = requests.request("GET", url, headers=headers, params=querystring)
 
-    details = json.loads(response.text)
-
-    film = details["title_results"]
-
-    id = film[0]['id']
-
-    url = f"https://watchmode.p.rapidapi.com/title/{id}/sources/"
-
-    headers = {
-        'regions': "GB",
-        'x-rapidapi-host': "watchmode.p.rapidapi.com",
-        'x-rapidapi-key': "80fb906771mshb7adef84037faf5p1c2d1fjsn193b151cfb14"
-        }
-
-    response = requests.request("GET", url, headers=headers)
-
     service = json.loads(response.text)
-
-    arr = service
 
     filtered = []
 
-    for i in range(len(arr)):
-        if arr[i]['type'] == "sub":
-            if "netflix" in arr[i]['web_url']:
-                arr[i]['service'] = "Netflix"
-                filtered.append(arr[i])
-            if "disneyplus" in arr[i]['web_url']:
-                arr[i]['service'] = "Disney+"
-                filtered.append(arr[i])
-            if "amazon" in arr[i]['web_url']:
-                arr[i]['service'] = "Prime Video"
-                filtered.append(arr[i])
-            
+    for stream in service['streamingInfo']:
+        if stream == "disney":
+            filtered.append({
+                "service": "Disney+",
+                "web_url": service['streamingInfo']['disney']['gb']['link']
+            })
+        elif stream == "netflix":
+            filtered.append({
+                "service": "Netflix",
+                "web_url": service['streamingInfo']['netflix']['gb']['link']
+            })
+        elif stream == "prime":
+            filtered.append({
+                "service": "Amazon Prime",
+                "web_url": service['streamingInfo']['prime']['gb']['link']
+            })
 
     return filtered
 
+"""
+    Method that is focused on pulling the metacritic scores and reviews
+    from both critics and audience for a chosen film
+"""
 def get_metacritic_scores(name):
     namelow = name.lower()
     formatted = namelow.replace(" ", "-")
@@ -622,6 +680,10 @@ def get_metacritic_scores(name):
 
     return res
 
+"""
+    Method focused on pulling the rotten tomatoes recent reviews of both
+    critics and audience
+"""
 def get_recent_rt_reviews(name, year):
     namelow = name.lower()
     formatted = namelow.replace(" ", "_")
@@ -669,9 +731,13 @@ def get_recent_rt_reviews(name, year):
     
     return reviews
 
+"""
+    Method that will pull the cached reviews from other sources for the 
+    chosen film
+"""
 def get_cached_recent(name):
     temp = None
-    for rev in RecentReviews.objects.all():
+    for rev in OnlineCriticandUserReviews.objects.all():
             if rev.film.name.lower() == name.lower():
                 temp = rev
                 break

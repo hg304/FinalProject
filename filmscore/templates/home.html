@@ -42,7 +42,7 @@
                 <tbody>
                     {% for visit in visited %}
                     <tr>
-                        <td><img src="{{ visit.film.poster }}" width="300" height="400"></td>
+                        <td><img src="{{ visit.film.poster }}" width="130" height="200"></td>
                         <td><a href="{% url 'selected' visit.film.name %}">{{ visit.film.name }}</a></td>
                         <td>{{ visit.film.avgscore }}</td>
                     </tr>
@@ -65,7 +65,7 @@
                 <tbody>
                     {% for visit in visited %}
                     <tr>
-                        <td><img src="{{ visit.film.poster }}" width="300" height="400"></td>
+                        <td><img src="{{ visit.film.poster }}" width="130" height="200"></td>
                         <td><a href="{% url 'selected' visit.film.name %}">{{ visit.film.name }}</a></td>
                         <td>{{ visit.film.avgscore }}</td>
                     </tr>

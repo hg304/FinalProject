@@ -297,9 +297,6 @@
                     <div v-if="stream.service == 'Prime Video'">
                         <a v-bind:href="stream.web_url"><button class="btn btn-info">Watch on [[ stream.service ]]</button></a>
                     </div>
-                    <div v-if="stream.service == 'NOW TV'">
-                        <a v-bind:href="stream.web_url"><button class="btn btn-warning">Watch on [[ stream.service ]]</button></a>
-                    </div>
                     <div v-if="stream.service == 'Disney+'">
                         <a v-bind:href="stream.web_url"><button class="btn btn-primary">Watch on [[ stream.service ]]</button></a>
                     </div>
@@ -438,7 +435,7 @@
                 if (response.ok){
                     let data = await response.json();
                     console.log(data)
-                    this.reviews = data.reviews;
+                    this.film.reviews = data.reviews;
                 }
             },
             async postReview() {
@@ -470,6 +467,7 @@
                     let data = await response.json();
                     console.log(data)
                     await this.getReviews(this.filmname);
+                    alert("Review successfully added");
                 } else {
                     alert("Review failed to be added");
                 }

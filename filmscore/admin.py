@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .forms import SignUpForm
-from .models import Account, AppReview, Film, SavedFilm, RecentReviews
+from .models import Account, AppReview, Film, SavedFilm, OnlineCriticandUserReviews, RecentlyVisited
 
 class AccountAdmin(UserAdmin):
     form = SignUpForm
@@ -12,4 +12,5 @@ admin.site.register(Account, AccountAdmin)
 admin.site.register(AppReview)
 admin.site.register(Film)
 admin.site.register(SavedFilm)
-admin.site.register(RecentReviews)
+admin.site.register(OnlineCriticandUserReviews)
+admin.site.register(RecentlyVisited)
