@@ -499,7 +499,9 @@ def get_movie(filmid, name):
 """
 def get_user_reviews(name):
     reviews = []
-    for review in AppReview.objects.all():
+    temp = AppReview.objects.all()
+    sorted = temp.order_by("-reviewDate")
+    for review in sorted:
         if review.film.name.lower() == name.lower():
             temp = review.to_dict()
             reviews.append(temp)
@@ -528,7 +530,7 @@ def post_review(request):
         review.title = POST['title']
         review.rating = POST['rating']
         review.description = POST['description']
-        review.reviewDate = POST['date']
+        review.reviewDate = timezone.now()
         review.reviewer = Account.objects.get(username=POST['reviewer'])
         temp = None
         for film in Film.objects.all():
