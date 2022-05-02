@@ -5,11 +5,11 @@
 <div>
     <h1>Hi {{ user.username }}</h1>
     <div>
-        <p>Here are your details:</p><br>
-        <p><strong>Username: {{ user.username }}</strong></p>
-        <p><strong>Email: {{ user.email }}</strong></p>
-        <p><strong>First Name: {{ user.firstName }}</strong></p>
-        <p><strong>Last Name: {{ user.lastName }}</strong></p>
+        <p>Here are your details:</p>
+        <p><strong>Username: [[ currentdetails.username ]]</strong></p>
+        <p><strong>Email: [[ currentdetails.email ]]</strong></p>
+        <p><strong>First Name: [[ currentdetails.firstName ]]</strong></p>
+        <p><strong>Last Name: [[ currentdetails.lastName ]]</strong></p>
 
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#changePassModal">
             Change Password
@@ -59,19 +59,19 @@
                         {% csrf_token %}
                         <div class="form-group">
                             <label for="username" class="form-control">Username</label>
-                            <input type="text" v-model="details.username" class="form-control" id="username" placeholder="Enter New Username">
+                            <input type="text" v-model="newdetails.username" class="form-control" id="username" placeholder="Enter New Username">
                         </div><br>
                         <div class="form-group">
                             <label for="email" class="form-control">Email</label>
-                            <input type="email" v-model="details.email" class="form-control" id="email" placeholder="Enter New Email">
+                            <input type="email" v-model="newdetails.email" class="form-control" id="email" placeholder="Enter New Email">
                         </div><br>
                         <div class="form-group">
                             <label for="firstName" class="form-control">First Name</label>
-                            <input type="text" v-model="details.firstname" class="form-control" id="firstName" placeholder="Enter first name">
+                            <input type="text" v-model="newdetails.firstname" class="form-control" id="firstName" placeholder="Enter first name">
                         </div><br>
                         <div class="form-group">
                             <label for="lastName" class="form-control">Last Name</label>
-                            <input type="text" v-model="details.lastname" class="form-control" id="lastName" placeholder="Enter last name">
+                            <input type="text" v-model="newdetails.lastname" class="form-control" id="lastName" placeholder="Enter last name">
                         </div>
                         <div class="form-group">
                             <button type="button" class="btn btn-success" v-on:click="changeDetails(details)">Submit</button>
@@ -110,20 +110,25 @@
 {% block scripts %}
 <script>
     let myApp = Vue.createApp({
+        delimiters: ["[[", "]]"],
         data() {
             return {
+                currentdetails: null,
                 pass: {
                     currentpass: null,
                     newpass1: null,
                     newpass2: null
                 },
-                details: {
+                newdetails: {
                     username: null,
                     email: null,
                     firstname: null,
                     lastname: null
                 }
             }
+        },
+        async created() {
+            await this.getProfileInfo();
         },
         methods: {
             async changePassword(pass) {
@@ -153,14 +158,14 @@
                     alert("Something went wrong with changing the password");
                 }
             },
-            async changeDetails(details) {
+            async changeDetails(newdetails) {
                 let response = await fetch("{% url 'changeinfo' %}", {
                     method: "POST",
                     body: JSON.stringify({
-                        username: this.details.username,
-                        email: this.details.email,
-                        firstname: this.details.firstname,
-                        lastname: this.details.lastname
+                        username: this.newdetails.username,
+                        email: this.newdetails.email,
+                        firstname: this.newdetails.firstname,
+                        lastname: this.newdetails.lastname
                     }),
                     headers: {
                         "Content-Type": "application/json",
@@ -169,17 +174,26 @@
                 });
 
                 if (response.ok) {
-                    console.log(this.details);
-                    this.details = {
+                    console.log(this.newdetails);
+                    this.newdetails = {
                         username: null,
                         email: null,
                         firstname: null,
                         lastname: null
                     };
-                    console.log(this.details);
                     alert("The details you wanted have successfully changed");
+                    await this.getProfileInfo();
                 } else {
                     alert("Something went wrong with changing the given details");
+                }
+            },
+            async getProfileInfo() {
+                let response = await fetch("{% url 'getprofileinfo' %}");
+                if (response.ok) {
+                    let data = await response.json();
+                    this.currentdetails = data;
+                } else {
+                    alert("Profile information failed to be loaded");
                 }
             }
         }

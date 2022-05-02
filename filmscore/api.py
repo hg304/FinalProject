@@ -6,6 +6,7 @@ import googleapiclient.discovery
 import difflib
 import string
 
+from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.hashers import check_password, make_password
 from django.utils import timezone
 from imdb import IMDb
@@ -25,6 +26,7 @@ def change_password(request):
                     if request.user.username == user.username:
                         user.password = make_password(PUT['newpass1'])
                         user.save()
+                        update_session_auth_hash(request, user)
                         return JsonResponse({})
         return HttpResponseBadRequest
 
@@ -57,6 +59,17 @@ def change_details(request):
             'firstname': user.firstName,
             'lastname': user.lastName
         })
+
+"""
+    Method that grabs the information of the user
+"""
+def get_profile_info(request):
+    temp = None
+    for user in Account.objects.all():
+        if user.username == request.user.username:
+            temp = user
+            break
+    return JsonResponse(temp.to_dict())
 
 """
     Method that pulls the current top 100 movies online

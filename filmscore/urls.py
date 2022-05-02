@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import home_view, film_view, selected_film_view, profile_view, top_films_view, login_view, signup_view, log_out
-from .api import search_movie, get_updated_user_reviews, post_review, add_to_saved_films, remove_from_saved_films, get_updated_list, get_popular_films, change_password, change_details
+from .api import search_movie, get_updated_user_reviews, post_review, add_to_saved_films, remove_from_saved_films, get_updated_list, get_popular_films, change_password, change_details, get_profile_info
 
 urlpatterns = [
     path('', home_view, name="home"),
@@ -19,5 +19,6 @@ urlpatterns = [
     path('api/addtosavedfilms/', add_to_saved_films, name="addtosaved"),
     path('api/removefromsavedfilms/', remove_from_saved_films, name="removefromsaved"),
     path('api/getnewlist/', get_updated_list, name="getnewlist"),
-    path('api/getpopularfilms/', get_popular_films, name="getpopularfilms")
+    path('api/getpopularfilms/', get_popular_films, name="getpopularfilms"),
+    path('api/getprofileinfo/', get_profile_info, name="getprofileinfo")
 ]

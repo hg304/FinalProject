@@ -14,13 +14,21 @@ class Account(AbstractUser):
     def __str__(self):
         return self.username
 
+    def to_dict(self):
+        return {
+            "username": self.username,
+            "email": self.email,
+            "firstName": self.firstName,
+            "lastName": self.lastName
+        }
+
 """
     Model representation of films that are cached in the system after
     being searched the first time
 """
 class Film(models.Model):
     name = models.CharField(max_length=200, primary_key=True)
-    imdbid = models.IntegerField()
+    imdbid = models.CharField(max_length=100)
     poster = models.CharField(max_length=1000)
     year = models.IntegerField()
     avgscore = models.IntegerField()
