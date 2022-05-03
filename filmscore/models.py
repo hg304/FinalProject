@@ -89,7 +89,7 @@ class AppReview(models.Model):
     title = models.CharField(max_length=200)
     rating = models.IntegerField()
     description = models.TextField()
-    reviewDate = models.DateField()
+    reviewDate = models.DateTimeField()
     reviewer = models.ForeignKey(Account, to_field='id', on_delete=models.CASCADE)
     film = models.ForeignKey(Film, to_field='name', on_delete=models.CASCADE)
 
