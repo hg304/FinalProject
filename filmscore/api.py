@@ -613,8 +613,8 @@ def get_recent_reviews(name, nameNoPunc, meta, metauser, year):
     recentrev = OnlineCriticandUserReviews()
     recentrev.rtcritic = rt
     recentrev.rtuser = rtuser
-    recentrev.metauser = meta
-    recentrev.metacritic = metauser
+    recentrev.metauser = metauser
+    recentrev.metacritic = meta
 
     temp = None
     for film in Film.objects.all():
