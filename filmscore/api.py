@@ -8,7 +8,7 @@ import string
 
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.hashers import check_password, make_password
-from django.utils import timezone
+from django.utils import timezone, dateformat
 from imdb import IMDb
 from rotten_tomatoes_scraper.rt_scraper import MovieScraper
 from django.http import HttpResponseBadRequest, JsonResponse

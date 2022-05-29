@@ -407,8 +407,8 @@
                     this.film.streaming.filter(stream => stream.type == "sub");
                     const metastart = "https://www.metacritic.com/movie/";
                     const rtstart = "https://www.rottentomatoes.com/m/";
-                    let metaend = filmname.toLowerCase().replace(" ", "-");
-                    let rtend = filmname.toLowerCase().replace(" ", "_");
+                    let metaend = filmname.toLowerCase().replaceAll(" ", "-");
+                    let rtend = filmname.toLowerCase().replaceAll(" ", "_");
                     this.metacriticurl = metastart + metaend + "/critic-reviews";
                     this.rtcriticurl = rtstart + rtend + "/reviews";
                     this.metauserurl = metastart + metaend + "/user-reviews";
